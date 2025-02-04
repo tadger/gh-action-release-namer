@@ -1,0 +1,8 @@
+name: "gh-action-release-namer"
+description: "A GitHub action for generating rugged release names in a random fashion."
+outputs:
+  name:
+    description: "The randomly generated, rugged name."
+runs:
+  using: node22
+  main: dist/cli.mjs
