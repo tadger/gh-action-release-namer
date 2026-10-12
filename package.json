@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "This action randomly creates a rugged name and adds it to GitHub Actions environment vars.",
   "repository": "https://github.com/tadger/gh-action-release-namer",
-  "keywords": ["generator", "random", "rugged"],
+  "keywords": [
+    "generator",
+    "random",
+    "rugged"
+  ],
   "author": "Jared <tadger>",
   "license": "MIT",
   "bugs": {
@@ -21,8 +25,8 @@
     "validate": "npm run type-check && biome ci --log-level=error --log-kind=pretty --diagnostic-level=error ."
   },
   "dependencies": {
-    "@actions/core": "1.10.0",
-    "@farts/release-namer": "4.0.1"
+    "@actions/core": "3.0.1",
+    "@farts/release-namer": "4.0.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
