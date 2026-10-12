@@ -25,3 +25,10 @@ test('generateName joins adjective and noun', () => {
 test('generateName rejects empty lists', () => {
   assert.throws(() => generateName([], ['x']))
 })
+
+test('generateName honours a custom delimiter', () => {
+  assert.equal(
+    generateName(['a'], ['x'], () => 0, '_'),
+    'a_x',
+  )
+})

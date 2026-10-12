@@ -19,3 +19,14 @@ The randomly generated rugged name.
   id: namer
 - run: echo "Your rugged name shall be ${{ steps.namer.outputs.name }} - ENJOY"
 ```
+
+## Trying it locally
+
+```sh
+npm run generate                       # one name, built-in lists
+npm run generate -- -n 5 -d _          # five names joined with "_"
+npm run generate -- -a my-adjectives.txt -o my-nouns.txt
+npm run generate -- --help
+```
+
+Options: `-n/--count`, `-d/--delimiter`, `-a/--adjectives <file>`, `-o/--nouns <file>`. Word list files are one word per line.
