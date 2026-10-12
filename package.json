@@ -3,11 +3,7 @@
   "version": "1.0.0",
   "description": "This action randomly creates a rugged name and adds it to GitHub Actions environment vars.",
   "repository": "https://github.com/tadger/gh-action-release-namer",
-  "keywords": [
-    "generator",
-    "random",
-    "rugged"
-  ],
+  "keywords": ["generator", "random", "rugged"],
   "author": "Jared <tadger>",
   "license": "MIT",
   "bugs": {
