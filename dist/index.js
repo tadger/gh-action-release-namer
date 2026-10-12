@@ -19539,11 +19539,11 @@ function error(message, properties = {}) {
 
 // src/namer.ts
 var import_node_crypto = require("node:crypto");
-function generateName(adjectives, nouns, random = (max) => (0, import_node_crypto.randomInt)(max)) {
+function generateName(adjectives, nouns, random = (max) => (0, import_node_crypto.randomInt)(max), delimiter = "-") {
   if (adjectives.length === 0 || nouns.length === 0) {
     throw new Error("Word lists must not be empty.");
   }
-  return `${adjectives[random(adjectives.length)]}-${nouns[random(nouns.length)]}`;
+  return `${adjectives[random(adjectives.length)]}${delimiter}${nouns[random(nouns.length)]}`;
 }
 function parseWords(text) {
   return text.split("\n").map((word) => word.trim()).filter(Boolean);
