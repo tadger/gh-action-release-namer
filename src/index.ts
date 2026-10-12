@@ -1,10 +1,8 @@
 import * as core from '@actions/core'
-import { generateName, parseWords } from './namer.js'
-import adjectivesText from './words/adjectives.txt'
-import nounsText from './words/nouns.txt'
+import { generate } from '@farts/release-namer'
 
 try {
-  const output = generateName(parseWords(adjectivesText), parseWords(nounsText))
+  const output = generate()
   console.log(`Generated name: ${output}`)
   core.setOutput('name', output)
 } catch (error) {
