@@ -15,7 +15,7 @@
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "build": "pkgroll",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.js && rm -rf dict && cp -R node_modules/namor/dict dict",
     "format": "biome check --log-level=error --log-kind=pretty --diagnostic-level=error --write .",
     "type-check": "tsc --noEmit",
     "validate": "npm run type-check && biome ci --log-level=error --log-kind=pretty --diagnostic-level=error ."
@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "pkgroll": "2.6.1",
+    "esbuild": "^0.28.2",
     "typescript": "5.7.3"
   }
 }

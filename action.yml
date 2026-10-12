@@ -5,4 +5,4 @@ outputs:
     description: "The randomly generated, rugged name."
 runs:
   using: node22
-  main: dist/cli.mjs
+  main: dist/index.js
