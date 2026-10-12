@@ -19058,6 +19058,448 @@ var require_undici = __commonJS({
   }
 });
 
+// node_modules/json-stringify-safe/stringify.js
+var require_stringify = __commonJS({
+  "node_modules/json-stringify-safe/stringify.js"(exports2, module2) {
+    exports2 = module2.exports = stringify;
+    exports2.getSerialize = serializer;
+    function stringify(obj, replacer, spaces, cycleReplacer) {
+      return JSON.stringify(obj, serializer(replacer, cycleReplacer), spaces);
+    }
+    function serializer(replacer, cycleReplacer) {
+      var stack = [], keys = [];
+      if (cycleReplacer == null) cycleReplacer = function(key, value) {
+        if (stack[0] === value) return "[Circular ~]";
+        return "[Circular ~." + keys.slice(0, stack.indexOf(value)).join(".") + "]";
+      };
+      return function(key, value) {
+        if (stack.length > 0) {
+          var thisPos = stack.indexOf(this);
+          ~thisPos ? stack.splice(thisPos + 1) : stack.push(this);
+          ~thisPos ? keys.splice(thisPos, Infinity, key) : keys.push(key);
+          if (~stack.indexOf(value)) value = cycleReplacer.call(this, key, value);
+        } else stack.push(value);
+        return replacer == null ? value : replacer.call(this, key, value);
+      };
+    }
+  }
+});
+
+// node_modules/random-seed/index.js
+var require_random_seed = __commonJS({
+  "node_modules/random-seed/index.js"(exports2, module2) {
+    "use strict";
+    var stringify = require_stringify();
+    var Mash = function() {
+      var n = 4022871197;
+      var mash = function(data) {
+        if (data) {
+          data = data.toString();
+          for (var i = 0; i < data.length; i++) {
+            n += data.charCodeAt(i);
+            var h = 0.02519603282416938 * n;
+            n = h >>> 0;
+            h -= n;
+            h *= n;
+            n = h >>> 0;
+            h -= n;
+            n += h * 4294967296;
+          }
+          return (n >>> 0) * 23283064365386963e-26;
+        } else {
+          n = 4022871197;
+        }
+      };
+      return mash;
+    };
+    var uheprng = function(seed) {
+      return (function() {
+        var o = 48;
+        var c = 1;
+        var p = o;
+        var s = new Array(o);
+        var i;
+        var j;
+        var k = 0;
+        var mash = new Mash();
+        for (i = 0; i < o; i++) {
+          s[i] = mash(Math.random());
+        }
+        var rawprng = function() {
+          if (++p >= o) {
+            p = 0;
+          }
+          var t = 1768863 * s[p] + c * 23283064365386963e-26;
+          return s[p] = t - (c = t | 0);
+        };
+        var random = function(range) {
+          return Math.floor(range * (rawprng() + (rawprng() * 2097152 | 0) * 11102230246251565e-32));
+        };
+        random.string = function(count) {
+          var i2;
+          var s2 = "";
+          for (i2 = 0; i2 < count; i2++) {
+            s2 += String.fromCharCode(33 + random(94));
+          }
+          return s2;
+        };
+        var hash = function() {
+          var args = Array.prototype.slice.call(arguments);
+          for (i = 0; i < args.length; i++) {
+            for (j = 0; j < o; j++) {
+              s[j] -= mash(args[i]);
+              if (s[j] < 0) {
+                s[j] += 1;
+              }
+            }
+          }
+        };
+        random.cleanString = function(inStr) {
+          inStr = inStr.replace(/(^\s*)|(\s*$)/gi, "");
+          inStr = inStr.replace(/[\x00-\x1F]/gi, "");
+          inStr = inStr.replace(/\n /, "\n");
+          return inStr;
+        };
+        random.hashString = function(inStr) {
+          inStr = random.cleanString(inStr);
+          mash(inStr);
+          for (i = 0; i < inStr.length; i++) {
+            k = inStr.charCodeAt(i);
+            for (j = 0; j < o; j++) {
+              s[j] -= mash(k);
+              if (s[j] < 0) {
+                s[j] += 1;
+              }
+            }
+          }
+        };
+        random.seed = function(seed2) {
+          if (typeof seed2 === "undefined" || seed2 === null) {
+            seed2 = Math.random();
+          }
+          if (typeof seed2 !== "string") {
+            seed2 = stringify(seed2, function(key, value) {
+              if (typeof value === "function") {
+                return value.toString();
+              }
+              return value;
+            });
+          }
+          random.initState();
+          random.hashString(seed2);
+        };
+        random.addEntropy = function() {
+          var args = [];
+          for (i = 0; i < arguments.length; i++) {
+            args.push(arguments[i]);
+          }
+          hash(k++ + (/* @__PURE__ */ new Date()).getTime() + args.join("") + Math.random());
+        };
+        random.initState = function() {
+          mash();
+          for (i = 0; i < o; i++) {
+            s[i] = mash(" ");
+          }
+          c = 1;
+          p = o;
+        };
+        random.done = function() {
+          mash = null;
+        };
+        if (typeof seed !== "undefined") {
+          random.seed(seed);
+        }
+        random.range = function(range) {
+          return random(range);
+        };
+        random.random = function() {
+          return random(Number.MAX_VALUE - 1) / Number.MAX_VALUE;
+        };
+        random.floatBetween = function(min, max) {
+          return random.random() * (max - min) + min;
+        };
+        random.intBetween = function(min, max) {
+          return Math.floor(random.random() * (max - min + 1)) + min;
+        };
+        return random;
+      })();
+    };
+    uheprng.create = function(seed) {
+      return new uheprng(seed);
+    };
+    module2.exports = uheprng;
+  }
+});
+
+// node_modules/lodash.defaults/index.js
+var require_lodash = __commonJS({
+  "node_modules/lodash.defaults/index.js"(exports2, module2) {
+    var MAX_SAFE_INTEGER = 9007199254740991;
+    var argsTag = "[object Arguments]";
+    var funcTag = "[object Function]";
+    var genTag = "[object GeneratorFunction]";
+    var reIsUint = /^(?:0|[1-9]\d*)$/;
+    function apply(func, thisArg, args) {
+      switch (args.length) {
+        case 0:
+          return func.call(thisArg);
+        case 1:
+          return func.call(thisArg, args[0]);
+        case 2:
+          return func.call(thisArg, args[0], args[1]);
+        case 3:
+          return func.call(thisArg, args[0], args[1], args[2]);
+      }
+      return func.apply(thisArg, args);
+    }
+    function baseTimes(n, iteratee) {
+      var index = -1, result = Array(n);
+      while (++index < n) {
+        result[index] = iteratee(index);
+      }
+      return result;
+    }
+    var objectProto = Object.prototype;
+    var hasOwnProperty = objectProto.hasOwnProperty;
+    var objectToString = objectProto.toString;
+    var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+    var nativeMax = Math.max;
+    function arrayLikeKeys(value, inherited) {
+      var result = isArray(value) || isArguments(value) ? baseTimes(value.length, String) : [];
+      var length = result.length, skipIndexes = !!length;
+      for (var key in value) {
+        if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && (key == "length" || isIndex(key, length)))) {
+          result.push(key);
+        }
+      }
+      return result;
+    }
+    function assignInDefaults(objValue, srcValue, key, object) {
+      if (objValue === void 0 || eq(objValue, objectProto[key]) && !hasOwnProperty.call(object, key)) {
+        return srcValue;
+      }
+      return objValue;
+    }
+    function assignValue(object, key, value) {
+      var objValue = object[key];
+      if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) || value === void 0 && !(key in object)) {
+        object[key] = value;
+      }
+    }
+    function baseKeysIn(object) {
+      if (!isObject(object)) {
+        return nativeKeysIn(object);
+      }
+      var isProto = isPrototype(object), result = [];
+      for (var key in object) {
+        if (!(key == "constructor" && (isProto || !hasOwnProperty.call(object, key)))) {
+          result.push(key);
+        }
+      }
+      return result;
+    }
+    function baseRest(func, start) {
+      start = nativeMax(start === void 0 ? func.length - 1 : start, 0);
+      return function() {
+        var args = arguments, index = -1, length = nativeMax(args.length - start, 0), array = Array(length);
+        while (++index < length) {
+          array[index] = args[start + index];
+        }
+        index = -1;
+        var otherArgs = Array(start + 1);
+        while (++index < start) {
+          otherArgs[index] = args[index];
+        }
+        otherArgs[start] = array;
+        return apply(func, this, otherArgs);
+      };
+    }
+    function copyObject(source, props, object, customizer) {
+      object || (object = {});
+      var index = -1, length = props.length;
+      while (++index < length) {
+        var key = props[index];
+        var newValue = customizer ? customizer(object[key], source[key], key, object, source) : void 0;
+        assignValue(object, key, newValue === void 0 ? source[key] : newValue);
+      }
+      return object;
+    }
+    function createAssigner(assigner) {
+      return baseRest(function(object, sources) {
+        var index = -1, length = sources.length, customizer = length > 1 ? sources[length - 1] : void 0, guard = length > 2 ? sources[2] : void 0;
+        customizer = assigner.length > 3 && typeof customizer == "function" ? (length--, customizer) : void 0;
+        if (guard && isIterateeCall(sources[0], sources[1], guard)) {
+          customizer = length < 3 ? void 0 : customizer;
+          length = 1;
+        }
+        object = Object(object);
+        while (++index < length) {
+          var source = sources[index];
+          if (source) {
+            assigner(object, source, index, customizer);
+          }
+        }
+        return object;
+      });
+    }
+    function isIndex(value, length) {
+      length = length == null ? MAX_SAFE_INTEGER : length;
+      return !!length && (typeof value == "number" || reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
+    }
+    function isIterateeCall(value, index, object) {
+      if (!isObject(object)) {
+        return false;
+      }
+      var type = typeof index;
+      if (type == "number" ? isArrayLike(object) && isIndex(index, object.length) : type == "string" && index in object) {
+        return eq(object[index], value);
+      }
+      return false;
+    }
+    function isPrototype(value) {
+      var Ctor = value && value.constructor, proto = typeof Ctor == "function" && Ctor.prototype || objectProto;
+      return value === proto;
+    }
+    function nativeKeysIn(object) {
+      var result = [];
+      if (object != null) {
+        for (var key in Object(object)) {
+          result.push(key);
+        }
+      }
+      return result;
+    }
+    function eq(value, other) {
+      return value === other || value !== value && other !== other;
+    }
+    function isArguments(value) {
+      return isArrayLikeObject(value) && hasOwnProperty.call(value, "callee") && (!propertyIsEnumerable.call(value, "callee") || objectToString.call(value) == argsTag);
+    }
+    var isArray = Array.isArray;
+    function isArrayLike(value) {
+      return value != null && isLength(value.length) && !isFunction(value);
+    }
+    function isArrayLikeObject(value) {
+      return isObjectLike(value) && isArrayLike(value);
+    }
+    function isFunction(value) {
+      var tag = isObject(value) ? objectToString.call(value) : "";
+      return tag == funcTag || tag == genTag;
+    }
+    function isLength(value) {
+      return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+    }
+    function isObject(value) {
+      var type = typeof value;
+      return !!value && (type == "object" || type == "function");
+    }
+    function isObjectLike(value) {
+      return !!value && typeof value == "object";
+    }
+    var assignInWith = createAssigner(function(object, source, srcIndex, customizer) {
+      copyObject(source, keysIn(source), object, customizer);
+    });
+    var defaults = baseRest(function(args) {
+      args.push(void 0, assignInDefaults);
+      return apply(assignInWith, void 0, args);
+    });
+    function keysIn(object) {
+      return isArrayLike(object) ? arrayLikeKeys(object, true) : baseKeysIn(object);
+    }
+    module2.exports = defaults;
+  }
+});
+
+// node_modules/haikunator/dist-node/index.js
+var require_dist_node = __commonJS({
+  "node_modules/haikunator/dist-node/index.js"(exports2, module2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    exports2["default"] = void 0;
+    var _randomSeed = _interopRequireDefault(require_random_seed());
+    var _lodash = _interopRequireDefault(require_lodash());
+    function _interopRequireDefault(obj) {
+      return obj && obj.__esModule ? obj : {
+        "default": obj
+      };
+    }
+    function _classCallCheck(instance, Constructor) {
+      if (!(instance instanceof Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+      }
+    }
+    function _defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+    function _createClass(Constructor, protoProps, staticProps) {
+      if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) _defineProperties(Constructor, staticProps);
+      return Constructor;
+    }
+    var defaultAdjectives = ["aged", "ancient", "autumn", "billowing", "bitter", "black", "blue", "bold", "broad", "broken", "calm", "cold", "cool", "crimson", "curly", "damp", "dark", "dawn", "delicate", "divine", "dry", "empty", "falling", "fancy", "flat", "floral", "fragrant", "frosty", "gentle", "green", "hidden", "holy", "icy", "jolly", "late", "lingering", "little", "lively", "long", "lucky", "misty", "morning", "muddy", "mute", "nameless", "noisy", "odd", "old", "orange", "patient", "plain", "polished", "proud", "purple", "quiet", "rapid", "raspy", "red", "restless", "rough", "round", "royal", "shiny", "shrill", "shy", "silent", "small", "snowy", "soft", "solitary", "sparkling", "spring", "square", "steep", "still", "summer", "super", "sweet", "throbbing", "tight", "tiny", "twilight", "wandering", "weathered", "white", "wild", "winter", "wispy", "withered", "yellow", "young"];
+    var defaultNouns = ["art", "band", "bar", "base", "bird", "block", "boat", "bonus", "bread", "breeze", "brook", "bush", "butterfly", "cake", "cell", "cherry", "cloud", "credit", "darkness", "dawn", "dew", "disk", "dream", "dust", "feather", "field", "fire", "firefly", "flower", "fog", "forest", "frog", "frost", "glade", "glitter", "grass", "hall", "hat", "haze", "heart", "hill", "king", "lab", "lake", "leaf", "limit", "math", "meadow", "mode", "moon", "morning", "mountain", "mouse", "mud", "night", "paper", "pine", "poetry", "pond", "queen", "rain", "recipe", "resonance", "rice", "river", "salad", "scene", "sea", "shadow", "shape", "silence", "sky", "smoke", "snow", "snowflake", "sound", "star", "sun", "sun", "sunset", "surf", "term", "thunder", "tooth", "tree", "truth", "union", "unit", "violet", "voice", "water", "waterfall", "wave", "wildflower", "wind", "wood"];
+    var defaultOptions = {
+      delimiter: "-",
+      tokenLength: 4,
+      tokenHex: false,
+      tokenChars: "0123456789"
+    };
+    var Haikunator2 = /* @__PURE__ */ (function() {
+      function Haikunator3() {
+        var options = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : {};
+        _classCallCheck(this, Haikunator3);
+        this.adjectives = options.adjectives || defaultAdjectives;
+        this.nouns = options.nouns || defaultNouns;
+        this.random = _randomSeed["default"].create(options.seed);
+        this.config = (0, _lodash["default"])(options.defaults, defaultOptions);
+      }
+      _createClass(Haikunator3, [{
+        key: "haikunate",
+        value: function haikunate(options) {
+          var config = (0, _lodash["default"])(options, this.config);
+          if (config.tokenHex === true) {
+            config.tokenChars = "0123456789abcdef";
+          }
+          var adjective = this._randomElement(this.adjectives);
+          var noun = this._randomElement(this.nouns);
+          if (!config.tokenLength) config.tokenLength = 0;
+          var token = "";
+          for (var i = 0; i < config.tokenLength; i++) {
+            token += this._randomElement(config.tokenChars);
+          }
+          var sections = [adjective, noun, token];
+          return sections.filter(function(e) {
+            return !!e;
+          }).join(config.delimiter);
+        }
+        /**
+         * Get a random element from an array/string
+         * @param {(string|Array)} array
+         * @returns {*}
+         * @private
+         */
+      }, {
+        key: "_randomElement",
+        value: function _randomElement(array) {
+          if (!array) return void 0;
+          return array[this.random(array.length)];
+        }
+      }]);
+      return Haikunator3;
+    })();
+    exports2["default"] = Haikunator2;
+    module2.exports = exports2.default;
+  }
+});
+
 // node_modules/@actions/core/lib/command.js
 var os = __toESM(require("os"), 1);
 
@@ -19537,27 +19979,742 @@ function error(message, properties = {}) {
   issueCommand("error", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 
-// src/namer.ts
-var import_node_crypto = require("node:crypto");
-function generateName(adjectives, nouns, random = (max) => (0, import_node_crypto.randomInt)(max), delimiter = "-") {
-  if (adjectives.length === 0 || nouns.length === 0) {
-    throw new Error("Word lists must not be empty.");
-  }
-  return `${adjectives[random(adjectives.length)]}${delimiter}${nouns[random(nouns.length)]}`;
+// node_modules/@farts/release-namer/dist/generate-D9M0PU9d.mjs
+var import_haikunator = __toESM(require_dist_node(), 1);
+var adjectives = [
+  "abandoned",
+  "active",
+  "almighty",
+  "amorous",
+  "arousing",
+  "audacious",
+  "avenged",
+  "bad",
+  "badass",
+  "ballistic",
+  "bareback",
+  "bawdy",
+  "bearded",
+  "beaten",
+  "beefcake",
+  "beefy",
+  "beguiling",
+  "bewitching",
+  "big",
+  "blackened",
+  "blazing",
+  "bloodied",
+  "bloody",
+  "bold",
+  "brave",
+  "brawny",
+  "brazen",
+  "broken",
+  "bulged",
+  "bulging",
+  "burly",
+  "burnt",
+  "butch",
+  "buxom",
+  "caged",
+  "capable",
+  "carnal",
+  "cheeky",
+  "chiseled",
+  "chivalrous",
+  "choppy",
+  "clandestine",
+  "climactic",
+  "coarse",
+  "cocky",
+  "compromising",
+  "conditioned",
+  "confident",
+  "corrupt",
+  "courageous",
+  "cunning",
+  "dangerous",
+  "dangling",
+  "daring",
+  "dauntless",
+  "debauched",
+  "decadent",
+  "deep",
+  "degenerate",
+  "dense",
+  "depraved",
+  "devilish",
+  "dignified",
+  "dishevelled",
+  "disreputable",
+  "dodgy",
+  "downtrodden",
+  "drunken",
+  "dry",
+  "dubious",
+  "durable",
+  "eager",
+  "elite",
+  "energetic",
+  "enforced",
+  "erect",
+  "excessive",
+  "exploding",
+  "explosive",
+  "fallen",
+  "fearful",
+  "fearless",
+  "ferocious",
+  "fevered",
+  "fierce",
+  "fiery",
+  "filthy",
+  "firm",
+  "flexing",
+  "flinty",
+  "flirty",
+  "foggy",
+  "forbidden",
+  "forced",
+  "forcible",
+  "forged",
+  "frisky",
+  "full",
+  "furious",
+  "furtive",
+  "gallant",
+  "gamy",
+  "gigantic",
+  "girthy",
+  "glorious",
+  "gnarly",
+  "golden",
+  "grandeur",
+  "greasy",
+  "grimy",
+  "grizzled",
+  "grizzly",
+  "gutsy",
+  "hairy",
+  "hanging",
+  "hardened",
+  "hardy",
+  "harsh",
+  "heaving",
+  "heavy",
+  "hefty",
+  "heroic",
+  "highpowered",
+  "hostile",
+  "howling",
+  "huge",
+  "hungover",
+  "hunky",
+  "husky",
+  "illicit",
+  "impossible",
+  "indecent",
+  "indomitable",
+  "inflexible",
+  "inglorious",
+  "insatiable",
+  "intense",
+  "intimate",
+  "intrepid",
+  "iron",
+  "jackboot",
+  "jagged",
+  "juicy",
+  "kicking",
+  "kinky",
+  "lascivious",
+  "leathery",
+  "lecherous",
+  "legendary",
+  "lengthy",
+  "lewd",
+  "libidinous",
+  "limp",
+  "loose",
+  "lurid",
+  "lusty",
+  "macho",
+  "magnificent",
+  "manful",
+  "manly",
+  "mannish",
+  "masculine",
+  "max",
+  "maximum",
+  "meaty",
+  "mighty",
+  "mischievous",
+  "moist",
+  "molded",
+  "monstrous",
+  "muscular",
+  "musky",
+  "naked",
+  "naughty",
+  "noble",
+  "notorious",
+  "nuclear",
+  "oily",
+  "panting",
+  "patriarchal",
+  "perky",
+  "plucky",
+  "plump",
+  "potent",
+  "powerful",
+  "premium",
+  "primal",
+  "pulsating",
+  "pummeled",
+  "pure",
+  "rabid",
+  "raging",
+  "randy",
+  "raunchy",
+  "raw",
+  "reinforced",
+  "relentless",
+  "resolute",
+  "righteous",
+  "rigid",
+  "ripped",
+  "risque",
+  "robust",
+  "rocky",
+  "rough",
+  "roughhewn",
+  "rowdy",
+  "rugged",
+  "rumpled",
+  "ruthless",
+  "salacious",
+  "sauced",
+  "saucy",
+  "savage",
+  "scabrous",
+  "scandalised",
+  "scandalous",
+  "seasoned",
+  "seedy",
+  "shady",
+  "shaggy",
+  "shameless",
+  "sharp",
+  "sharpened",
+  "shaving",
+  "sinful",
+  "sizable",
+  "slippery",
+  "sloppy",
+  "smoldering",
+  "smutty",
+  "solid",
+  "sordid",
+  "sozzled",
+  "stable",
+  "stalwart",
+  "stampeding",
+  "stark",
+  "staunch",
+  "steadfast",
+  "steady",
+  "steamy",
+  "steeled",
+  "sterling",
+  "stiff",
+  "stormy",
+  "stout",
+  "strapping",
+  "strong",
+  "stubbled",
+  "studly",
+  "sturdy",
+  "suave",
+  "substantial",
+  "sultry",
+  "super",
+  "supreme",
+  "swanson",
+  "sweaty",
+  "swole",
+  "tame",
+  "tawdry",
+  "techno",
+  "tenacious",
+  "thick",
+  "throbbing",
+  "tight",
+  "tipsy",
+  "tough",
+  "transcendent",
+  "tumescent",
+  "turbo",
+  "turgid",
+  "twisted",
+  "tyrannosaurus",
+  "ultimate",
+  "unbreakable",
+  "unbridled",
+  "unbuttoned",
+  "unclothed",
+  "undaunted",
+  "unrelenting",
+  "unyielding",
+  "unzipped",
+  "upright",
+  "valiant",
+  "valorous",
+  "vehicular",
+  "velvet",
+  "venturous",
+  "vicious",
+  "vigorous",
+  "violent",
+  "virile",
+  "viscous",
+  "wanton",
+  "wayward",
+  "weak",
+  "weathered",
+  "wet",
+  "wicked",
+  "wild",
+  "wily",
+  "worn",
+  "wrinkled",
+  "yearning",
+  "zealous"
+];
+var nouns = [
+  "affair",
+  "aggression",
+  "alcove",
+  "alibi",
+  "alleyway",
+  "alpha",
+  "anaconda",
+  "armageddon",
+  "attack",
+  "auger",
+  "avenger",
+  "backroom",
+  "bacon",
+  "badass",
+  "ballistic",
+  "bar",
+  "barbecue",
+  "barfight",
+  "barmaid",
+  "baron",
+  "barrage",
+  "barrel",
+  "battle",
+  "battleaxe",
+  "bear",
+  "beard",
+  "bearskin",
+  "bedpost",
+  "bedsheet",
+  "beef",
+  "beefcake",
+  "beer",
+  "bicep",
+  "biscuit",
+  "blaster",
+  "blood",
+  "bomb",
+  "bonanza",
+  "bone",
+  "bordello",
+  "bosom",
+  "bourbon",
+  "box",
+  "boxer",
+  "bratwurst",
+  "brawn",
+  "brimstone",
+  "bronco",
+  "brothel",
+  "bruise",
+  "buck",
+  "bull",
+  "bullet",
+  "bunk",
+  "burlesque",
+  "burn",
+  "bushwak",
+  "buttress",
+  "buzzsaw",
+  "cabaret",
+  "cad",
+  "cage",
+  "camp",
+  "cannon",
+  "cannons",
+  "casanova",
+  "caution",
+  "chainsaw",
+  "challenge",
+  "chambermaid",
+  "champagne",
+  "cherry",
+  "chest",
+  "chop",
+  "chopper",
+  "cigar",
+  "claw",
+  "cleavage",
+  "clip",
+  "cobra",
+  "codpiece",
+  "coil",
+  "competition",
+  "concubine",
+  "corvette",
+  "courage",
+  "cucumber",
+  "cufflink",
+  "cure",
+  "curtain",
+  "cutlass",
+  "czar",
+  "dagger",
+  "dalliance",
+  "damage",
+  "danger",
+  "darkness",
+  "death",
+  "deathgrip",
+  "deck",
+  "delay",
+  "demon",
+  "den",
+  "denim",
+  "desert",
+  "desire",
+  "dinosaur",
+  "dirigible",
+  "dog",
+  "dogs",
+  "dominance",
+  "dragon",
+  "drain",
+  "drill",
+  "drone",
+  "dropkick",
+  "dungeon",
+  "dust",
+  "eagle",
+  "eagles",
+  "earth",
+  "echo",
+  "embrace",
+  "emperor",
+  "empire",
+  "encounter",
+  "endurance",
+  "enemies",
+  "enemy",
+  "engine",
+  "escapade",
+  "explode",
+  "eye",
+  "face",
+  "falcon",
+  "fandango",
+  "fangs",
+  "fear",
+  "feast",
+  "fence",
+  "ferrari",
+  "fight",
+  "fightmaster",
+  "fire",
+  "fireball",
+  "fish",
+  "fist",
+  "flag",
+  "flames",
+  "fling",
+  "flint",
+  "flood",
+  "floozy",
+  "fondue",
+  "fool",
+  "force",
+  "forge",
+  "fortress",
+  "frame",
+  "frolic",
+  "fume",
+  "garter",
+  "gate",
+  "gates",
+  "gigolo",
+  "glory",
+  "glue",
+  "gondola",
+  "grease",
+  "greatness",
+  "grill",
+  "guard",
+  "guts",
+  "hammer",
+  "harley",
+  "hawk",
+  "haystack",
+  "head",
+  "heap",
+  "heat",
+  "hell",
+  "hellfire",
+  "helmet",
+  "hero",
+  "heroes",
+  "hill",
+  "hills",
+  "honeypot",
+  "hook",
+  "horsepower",
+  "hotel",
+  "hotrod",
+  "hound",
+  "hounds",
+  "hulk",
+  "hunk",
+  "hurricane",
+  "indiscretion",
+  "infinity",
+  "interlude",
+  "iron",
+  "jail",
+  "jaw",
+  "jaws",
+  "jerky",
+  "jet",
+  "jetblast",
+  "jewels",
+  "joystick",
+  "king",
+  "knees",
+  "knickers",
+  "knuckles",
+  "kraken",
+  "lace",
+  "land",
+  "lantern",
+  "leather",
+  "legend",
+  "liaison",
+  "lightning",
+  "lingerie",
+  "lion",
+  "lock",
+  "log",
+  "lothario",
+  "love",
+  "lumber",
+  "lumberjack",
+  "lust",
+  "machete",
+  "magnificence",
+  "manhood",
+  "mattress",
+  "meat",
+  "meatslab",
+  "meatwagon",
+  "member",
+  "mercy",
+  "metal",
+  "mettle",
+  "might",
+  "mincemeat",
+  "missile",
+  "mistress",
+  "monster",
+  "moonlight",
+  "mortal",
+  "motel",
+  "motor",
+  "motorcycle",
+  "mount",
+  "mountain",
+  "mug",
+  "muscle",
+  "mustache",
+  "mustang",
+  "nail",
+  "nap",
+  "night",
+  "nightcap",
+  "nipper",
+  "nooner",
+  "nunchuck",
+  "nunchuk",
+  "nutmeg",
+  "oak",
+  "oil",
+  "opponent",
+  "organ",
+  "overdrive",
+  "pack",
+  "package",
+  "paint",
+  "panther",
+  "panzer",
+  "passion",
+  "peach",
+  "peak",
+  "peccadillo",
+  "peg",
+  "phoenix",
+  "pickle",
+  "pillow",
+  "pine",
+  "pistol",
+  "piston",
+  "plane",
+  "pleasure",
+  "plunger",
+  "poker",
+  "pole",
+  "power",
+  "predator",
+  "pub",
+  "python",
+  "raptor",
+  "rendezvous",
+  "reverie",
+  "revolution",
+  "rex",
+  "ride",
+  "rifle",
+  "rock",
+  "rocket",
+  "rod",
+  "rodeo",
+  "romp",
+  "rooster",
+  "rope",
+  "rulership",
+  "rump",
+  "saber",
+  "sauce",
+  "sausage",
+  "saw",
+  "scandal",
+  "scar",
+  "scorpion",
+  "scotch",
+  "scoundrel",
+  "seal",
+  "seduction",
+  "sergeant",
+  "shade",
+  "shaft",
+  "shark",
+  "sheets",
+  "shelter",
+  "shenanigan",
+  "shotgun",
+  "shrapnel",
+  "sidepiece",
+  "slipper",
+  "smoke",
+  "smut",
+  "sofa",
+  "spark",
+  "speakeasy",
+  "spit",
+  "spoils",
+  "stain",
+  "stallion",
+  "stampede",
+  "stash",
+  "steak",
+  "stiletto",
+  "stitch",
+  "storm",
+  "stranglehold",
+  "strap",
+  "stratosphere",
+  "streetfight",
+  "stud",
+  "stunt",
+  "suitor",
+  "sun",
+  "suplex",
+  "swagger",
+  "swain",
+  "swanson",
+  "sword",
+  "talon",
+  "tango",
+  "tavern",
+  "tent",
+  "thrust",
+  "thunder",
+  "tiger",
+  "tire",
+  "titanium",
+  "toast",
+  "tomahawk",
+  "tomcat",
+  "tool",
+  "tornado",
+  "torpedo",
+  "truck",
+  "trunk",
+  "tryst",
+  "turbo",
+  "turkeyleg",
+  "typhoon",
+  "uppercut",
+  "urge",
+  "valhalla",
+  "valley",
+  "velvet",
+  "vengeance",
+  "vice",
+  "victory",
+  "vigor",
+  "viking",
+  "viper",
+  "war",
+  "warrior",
+  "warthog",
+  "weakness",
+  "wench",
+  "whiskey",
+  "whisper",
+  "wiener",
+  "wizard",
+  "wolf",
+  "wolves",
+  "zipper"
+];
+var defaultConfig = { tokenLength: 0, delimiter: "-" };
+function generate(config) {
+  const params = { ...defaultConfig, ...config };
+  const haikunator = new import_haikunator.default({
+    adjectives,
+    nouns,
+    seed: (/* @__PURE__ */ new Date()).getTime().toString(),
+    defaults: {
+      tokenLength: 0
+    }
+  });
+  return haikunator.haikunate(params);
 }
-function parseWords(text) {
-  return text.split("\n").map((word) => word.trim()).filter(Boolean);
-}
-
-// src/words/adjectives.txt
-var adjectives_default = "abandoned\nactive\nalmighty\namorous\narousing\naudacious\navenged\nbad\nbadass\nballistic\nbareback\nbawdy\nbearded\nbeaten\nbeefcake\nbeefy\nbeguiling\nbewitching\nbig\nblackened\nblazing\nbloodied\nbloody\nbold\nbrave\nbrawny\nbrazen\nbroken\nbulged\nbulging\nburly\nburnt\nbutch\nbuxom\ncaged\ncapable\ncarnal\ncheeky\nchiseled\nchivalrous\nchoppy\nclandestine\nclimactic\ncoarse\ncocky\ncompromising\nconditioned\nconfident\ncorrupt\ncourageous\ncunning\ndangerous\ndangling\ndaring\ndauntless\ndebauched\ndecadent\ndeep\ndegenerate\ndense\ndepraved\ndevilish\ndignified\ndishevelled\ndisreputable\ndodgy\ndowntrodden\ndrunken\ndry\ndubious\ndurable\neager\nelite\nenergetic\nenforced\nerect\nexcessive\nexploding\nexplosive\nfallen\nfearful\nfearless\nferocious\nfevered\nfierce\nfiery\nfilthy\nfirm\nflexing\nflinty\nflirty\nfoggy\nforbidden\nforced\nforcible\nforged\nfrisky\nfull\nfurious\nfurtive\ngallant\ngamy\ngigantic\ngirthy\nglorious\ngnarly\ngolden\ngrandeur\ngreasy\ngrimy\ngrizzled\ngrizzly\ngutsy\nhairy\nhanging\nhardened\nhardy\nharsh\nheaving\nheavy\nhefty\nheroic\nhighpowered\nhostile\nhowling\nhuge\nhungover\nhunky\nhusky\nillicit\nimpossible\nindecent\nindomitable\ninflexible\ninglorious\ninsatiable\nintense\nintimate\nintrepid\niron\njackboot\njagged\njuicy\nkicking\nkinky\nlascivious\nleathery\nlecherous\nlegendary\nlengthy\nlewd\nlibidinous\nlimp\nloose\nlurid\nlusty\nmacho\nmagnificent\nmanful\nmanly\nmannish\nmasculine\nmax\nmaximum\nmeaty\nmighty\nmischievous\nmoist\nmolded\nmonstrous\nmuscular\nmusky\nnaked\nnaughty\nnoble\nnotorious\nnuclear\noily\npanting\npatriarchal\nperky\nplucky\nplump\npotent\npowerful\npremium\nprimal\npulsating\npummeled\npure\nrabid\nraging\nrandy\nraunchy\nraw\nreinforced\nrelentless\nresolute\nrighteous\nrigid\nripped\nrisque\nrobust\nrocky\nrough\nroughhewn\nrowdy\nrugged\nrumpled\nruthless\nsalacious\nsauced\nsaucy\nsavage\nscabrous\nscandalised\nscandalous\nseasoned\nseedy\nshady\nshaggy\nshameless\nsharp\nsharpened\nshaving\nsinful\nsizable\nslippery\nsloppy\nsmoldering\nsmutty\nsolid\nsordid\nsozzled\nstable\nstalwart\nstampeding\nstark\nstaunch\nsteadfast\nsteady\nsteamy\nsteeled\nsterling\nstiff\nstormy\nstout\nstrapping\nstrong\nstubbled\nstudly\nsturdy\nsuave\nsubstantial\nsultry\nsuper\nsupreme\nswanson\nsweaty\nswole\ntame\ntawdry\ntechno\ntenacious\nthick\nthrobbing\ntight\ntipsy\ntough\ntranscendent\ntumescent\nturbo\nturgid\ntwisted\ntyrannosaurus\nultimate\nunbreakable\nunbridled\nunbuttoned\nunclothed\nundaunted\nunrelenting\nunyielding\nunzipped\nupright\nvaliant\nvalorous\nvehicular\nvelvet\nventurous\nvicious\nvigorous\nviolent\nvirile\nviscous\nwanton\nwayward\nweak\nweathered\nwet\nwicked\nwild\nwily\nworn\nwrinkled\nyearning\nzealous\n";
-
-// src/words/nouns.txt
-var nouns_default = "affair\naggression\nalcove\nalibi\nalleyway\nanaconda\narmageddon\nattack\nauger\navenger\nbackroom\nbacon\nbadass\nballistic\nballs\nbar\nbarbecue\nbarfight\nbarmaid\nbaron\nbarrage\nbarrel\nbattle\nbattleaxe\nbear\nbeard\nbearskin\nbedpost\nbedsheet\nbeef\nbeefcake\nbeer\nbicep\nbiscuit\nblaster\nblood\nbomb\nbonanza\nboner\nbordello\nbosom\nbourbon\nbox\nbrawn\nbrimstone\nbronco\nbrothel\nbruise\nbuck\nbull\nbullet\nbunk\nburlesque\nburn\nbushwak\nbuttress\nbuzzsaw\ncabaret\ncad\ncage\ncamp\ncannon\ncannons\ncasanova\ncaution\nchainsaw\nchallenge\nchambermaid\nchampagne\ncherry\nchest\nchop\ncigar\nclaw\ncleavage\nclip\ncobra\ncodpiece\ncoil\ncompetition\nconcubine\ncorvette\ncourage\ncucumber\ncufflink\ncure\ncurtain\ncutlass\nczar\ndagger\ndalliance\ndamage\ndanger\ndarkness\ndeath\ndeathgrip\ndeck\ndelay\ndemon\nden\ndenim\nderriere\ndesert\ndesire\ndinosaur\ndirigible\ndog\ndogs\ndominance\ndong\ndragon\ndrain\ndrill\ndrone\ndropkick\ndungeon\ndust\neagle\neagles\nearth\necho\nembrace\nemperor\nempire\nencounter\nendurance\nenemies\nenemy\nengine\nescapade\nexplode\neye\nface\nfalcon\nfandango\nfangs\nfear\nfeast\nfence\nferrari\nfight\nfightmaster\nfire\nfireball\nfish\nfist\nflag\nflames\nfling\nflint\nflood\nfloozy\nfondue\nfool\nforce\nforge\nfornication\nfortress\nframe\nfrolic\nfume\ngarter\ngate\ngates\ngigolo\nglory\nglue\ngondola\ngrease\ngreatness\ngrill\nguard\nguts\nhammer\nharley\nharlot\nhawk\nhaystack\nhead\nheap\nheat\nhell\nhellfire\nhelmet\nhero\nheroes\nhickey\nhill\nhills\nhoneypot\nhook\nhorsepower\nhotel\nhound\nhounds\nhulk\nhunk\nhurricane\nhussy\nice\nindiscretion\ninfinity\ninterlude\niron\njail\njaw\njaws\njerky\njet\njetblast\njezebel\njoystick\nking\nknees\nknickers\nknuckles\nkraken\nlace\nland\nlantern\nleather\nlegend\nliaison\nlightning\nlingerie\nlion\nlock\nlog\nlothario\nlove\nlumber\nlumberjack\nlust\nmachete\nmagnificence\nmanhood\nmattress\nmeat\nmeatslab\nmember\nmercy\nmetal\nmettle\nmight\nmincemeat\nminx\nmissile\nmistress\nmonster\nmoonlight\nmortal\nmotel\nmotor\nmotorcycle\nmount\nmountain\nmug\nmuscle\nmustache\nmustang\nnail\nnap\nnight\nnightcap\nnightgown\nnipper\nnooner\nnunchuck\nnunchuk\nnutmeg\noak\noil\nopponent\norgan\norgy\noverdrive\npack\npackage\npaint\npanther\npanzer\nparamour\npassion\npeach\npeak\npeccadillo\npeg\nphoenix\npickle\npillow\npine\npistol\npiston\nplane\npleasure\nplunger\npoker\npole\npower\npredator\npub\npython\nquickie\nraptor\nrendezvous\nreverie\nrevolution\nrex\nride\nrifle\nrock\nrod\nrodeo\nromp\nrooster\nrope\nrulership\nrump\nsaber\nsauce\nsausage\nsaw\nscandal\nscar\nscorpion\nscotch\nscoundrel\nseal\nseduction\nsergeant\nshade\nshaft\nshark\nsheets\nshelter\nshenanigan\nshotgun\nshrapnel\nslipper\nsmoke\nsmut\nsofa\nspark\nspeakeasy\nspit\nspoils\nstain\nstallion\nstampede\nstash\nsteak\nstiletto\nstitch\nstorm\nstranglehold\nstrap\nstratosphere\nstreetfight\nstrumpet\nstud\nstunt\nsuitor\nsun\nswagger\nswain\nswanson\nsword\ntalon\ntango\ntavern\ntemptress\ntent\nthrust\nthunder\ntiger\ntire\ntitanium\ntoast\ntomahawk\ntomcat\ntool\ntornado\ntorpedo\ntrollop\ntruck\ntrunk\ntryst\nturbo\nturkeyleg\ntyphoon\nuppercut\nurge\nvalhalla\nvalley\nvelvet\nvengeance\nvice\nvictory\nvigor\nviking\nviper\nvixen\nwar\nwarrior\nwarthog\nweakness\nwench\nwhiskey\nwhisper\nwiener\nwizard\nwolf\nwolves\nzipper\n";
 
 // src/index.ts
 try {
-  const output = generateName(parseWords(adjectives_default), parseWords(nouns_default));
+  const output = generate();
   console.log(`Generated name: ${output}`);
   setOutput("name", output);
 } catch (error2) {
