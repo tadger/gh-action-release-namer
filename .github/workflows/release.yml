@@ -18,3 +18,10 @@ jobs:
           TAG: ${{ github.ref_name }}
           NAME: ${{ steps.namer.outputs.name }}
         run: gh release create "$TAG" --title "$TAG - $NAME" --generate-notes
+      - name: Move major version tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          major="${TAG%%.*}"
+          git tag -f "$major" "$TAG"
+          git push --force origin "refs/tags/$major"
