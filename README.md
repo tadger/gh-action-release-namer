@@ -1,6 +1,6 @@
 # Random, Rugged, Release Name Generator as a GitHub Action
 
-This action randomly creates a rugged name and exposes it as a step output. [@farts/release-namer](https://github.com/tadger/release-namer) is used to generate the name that is so rugged.
+This action randomly creates a rugged name and exposes it as a step output. Names are an adjective and a noun drawn at random from our own word lists in `src/words/`, which started life as the rugged lists from [namor](https://github.com/jsonmaur/namor) (MIT). Expect them to be a touch bawdy.
 
 ## Outputs
 
