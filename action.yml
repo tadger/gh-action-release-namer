@@ -4,5 +4,5 @@ outputs:
   name:
     description: "The randomly generated, rugged name."
 runs:
-  using: node22
+  using: node24
   main: dist/index.js
